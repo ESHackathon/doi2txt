@@ -17,13 +17,22 @@
 #' secs
 #' texts <- lapply(dois, doi2html)
 #' secs <- candidate_sections(texts)
+#' secs
 candidate_sections <- function(text,
                                length = 40){
 
   #internal function to shorten texts to (abstract -> references)
   shorten <- function(text){
-    start <- min(grep('Abstract', text)) #detect start of text
-    end <- max(grep('Reference', text)) #detect end of text
+    if (grepl('Abstract', text) == TRUE){
+      start <- min(grep('Abstract', text)) #detect start of text
+    } else {
+      start <- 1
+    }
+    if (grepl('Reference', text) == TRUE){
+      end <- max(grep('Reference', text)) #detect end of text
+    } else {
+      end <- length(text)
+    }
     short <- text[start:end] #create short text from abstract to references
     return(short)
   }
@@ -36,13 +45,21 @@ candidate_sections <- function(text,
 
   } else {
     short <- lapply(text, shorten)
+    #short <- list()
+    #for (i in 1:length(text)){
+    #  x <- shorten(unlist(text[i]))
+    #  short <- c(short, x)
+    #}
     output <- lapply(short, function(x, y = length){x[nchar(x) < y]}) #extract all lines less than 'length' characters long
     output <- unique(unlist(output)) #deduplicate across multiple texts
   }
 
   # tidy output (remove non alphanumerics and empty values)
   output <- trimws(gsub("[^[:alnum:] ]", "", output))
+  output <- output[!grepl("\\D", output)==FALSE] #exclude numbers only
   output <- output[output != ""]
+  output <- unique(output)
+  output <- sort(output)
   return(output)
 
 }
